@@ -40,7 +40,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'news_profit',
+    'publication',
+    'law',
 ]
+
+AUTH_USER_MODEL = 'news_profit.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
