@@ -7,4 +7,5 @@ urlpatterns = [
     path('api/v1/register/', news_profit.RegisterApiView.as_view()),
     path('api/v1/confirm/', news_profit.ConfirmApiView.as_view()),
     path('api/v1/login/', news_profit.LoginApiView.as_view()),
+    path('api/v1/favorites/', news_profit.FavoriteCreateListDestroyApiView.as_view()),
 ]

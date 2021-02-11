@@ -6,10 +6,12 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from news_profit.models import News, User, ConfirmationCode
-from news_profit.serializers import NewsSerializer
+from news_profit.models import News, User, ConfirmationCode, FavoriteNews
+from news_profit.permissions import IsClient
+from news_profit.serializers import NewsSerializer, FavoriteNewsSerializer
 
 
 class NewsAPIView(APIView, PageNumberPagination):
@@ -65,9 +67,8 @@ class NewsAPIViewDetail(APIView):
 
 
 class RegisterApiView(APIView):
-
     def post(self, request, *args, **kwargs):
-        phone = request.data.get('phone')  # +996700012122
+        phone = request.data.get('phone')  # +996700772776
         password = request.data.get('password')
         user = User.objects.create(phone=phone,
                                    password=password)
@@ -84,15 +85,16 @@ class RegisterApiView(APIView):
 class ConfirmApiView(APIView):
     def post(self, request, *args, **kwargs):
         code = request.data.get('code')
-        try:
-            token = Token.objects.get(user=self.request.user)
-        except Token.DoesNotExist:
-            token = Token.objects.create(user=self.request.user)
         codes = ConfirmationCode.objects.get(code=code,
                                              valid_until__gte=datetime.now())
         user = codes.user
         user.is_active = True
         user.save()
+        codes.delete()
+        try:
+            token = Token.objects.get(user=self.request.user)
+        except Token.DoesNotExist:
+            token = Token.objects.create(user=self.request.user)
         return Response(data={'token': token.key},
                         status=status.HTTP_200_OK)
 
@@ -110,3 +112,30 @@ class LoginApiView(APIView):
             except Token.DoesNotExist:
                 token = Token.objects.create(user=user)
             return Response(data={'token': token.key}, status=status.HTTP_200_OK)
+
+
+class FavoriteCreateListDestroyApiView(APIView):
+    permission_classes = [IsClient]
+
+    def post(self, request):
+        news_id = int(request.data.get('news_id'))
+        try:
+            favourite = FavoriteNews.objects.get(news_id=news_id, user=request.user)
+        except:
+            favourite = FavoriteNews.objects.create(news_id=news_id, user=request.user)
+            favourite.save()
+        return Response(status=status.HTTP_200_OK,
+                        data=FavoriteNewsSerializer(favourite).data)
+
+    def get(self, request):
+        favourites = FavoriteNews.objects.filter(user=request.user)
+        return Response(data=FavoriteNewsSerializer(favourites,
+                                                     many=True).data,
+                        status=status.HTTP_200_OK)
+
+    def delete(self, request):
+        news_id = int(request.data.get('news_id'))
+        favourites = FavoriteNews.objects.filter(news_id=news_id,
+                                                  user=request.user)
+        favourites.delete()
+        return Response(status=status.HTTP_200_OK)

@@ -1,3 +1,5 @@
 from django.contrib import admin
+from law.models import Law, FavoriteLaw
 
-# Register your models here.
+admin.site.register(Law)
+admin.site.register(FavoriteLaw)
