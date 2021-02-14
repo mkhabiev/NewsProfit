@@ -3,6 +3,9 @@ from news_profit.models import User
 
 
 class Law(models.Model):
+    class Meta:
+        verbose_name = 'Закон'
+        verbose_name_plural = 'Законы'
     title = models.CharField(max_length=100)
     description = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)

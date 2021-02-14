@@ -22,18 +22,15 @@ class NewsAPIView(APIView, PageNumberPagination):
         query = request.query_params.get('query', '')
         news = News.objects.filter(Q(title__contains=query) |
                                    Q(description__contains=query))
-        results = self.paginate_queryset(news,
-                                         request,
-                                         view=self)
+        results = self.paginate_queryset(news, request, view=self)
 
-        return self.get_paginated_response(self.serializer_class(results,
-                                                                 many=True).data)
+        return self.get_paginated_response(self.serializer_class(results, many=True,
+                                                                 context={'request': request}).data)
 
     def post(self, request):
         title = request.data.get('title')
         description = request.data.get('description')
-        news = News.objects.create(title=title,
-                                   description=description)
+        news = News.objects.create(title=title, description=description)
         news.save()
         return Response(data=self.serializer_class(news).data,
                         status=status.HTTP_201_CREATED)
